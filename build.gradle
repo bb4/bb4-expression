@@ -1,0 +1,35 @@
+plugins {
+    id "com.github.maiflai.scalatest" version "0.25" // needed to run scala tests
+}
+description = 'Library for parsing mathematical expressions'
+group = 'com.barrybecker4'
+version = '1.6-SNAPSHOT'
+
+apply from: 'https://raw.githubusercontent.com/bb4/bb4-common/master/bb4.gradle'
+
+project.archivesBaseName = 'bb4-project-template'
+mainClassName = 'com.barrybecker4.expression.ExpressionDemo'
+
+
+task runHelloWorld(type: JavaExec, dependsOn: classes) {
+    group = 'application'
+    main = 'com.barrybecker4.newpackage.HelloWorld'
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+dependencies {
+    //compile 'com.barrybecker4:bb4-common:1.6-SNAPSHOT'
+}
+
+jar {
+    archiveName = "${archivesBaseName}-${version}.jar"
+    manifest {
+        attributes 'Implementation-Title': '<project code>',
+                'Implementation-Version': version,
+                'provider': 'gradle',
+                'Main-Class': mainClassName
+    }
+}
+
+// This allows publishing of this project library to Sonatype
+apply from: 'https://raw.githubusercontent.com/bb4/bb4-common/master/bb4-publish.gradle'
