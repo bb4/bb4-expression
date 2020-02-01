@@ -7,14 +7,15 @@ version = '1.6-SNAPSHOT'
 
 apply from: 'https://raw.githubusercontent.com/bb4/bb4-common/master/bb4.gradle'
 
-project.archivesBaseName = 'bb4-project-template'
+project.archivesBaseName = 'bb4-expression'
 mainClassName = 'com.barrybecker4.expression.ExpressionDemo'
 
 
-task runHelloWorld(type: JavaExec, dependsOn: classes) {
+task runExpressionDemo(type: JavaExec, dependsOn: classes) {
     group = 'application'
-    main = 'com.barrybecker4.newpackage.HelloWorld'
+    main = 'com.barrybecker4.expression.ExpressionDemo'
     classpath = sourceSets.main.runtimeClasspath
+    standardInput = System.in
 }
 
 dependencies {
@@ -24,7 +25,7 @@ dependencies {
 jar {
     archiveName = "${archivesBaseName}-${version}.jar"
     manifest {
-        attributes 'Implementation-Title': '<project code>',
+        attributes 'Implementation-Title': 'bb4-expression project code',
                 'Implementation-Version': version,
                 'provider': 'gradle',
                 'Main-Class': mainClassName
