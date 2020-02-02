@@ -1,21 +1,18 @@
-# bb4-project-template
-A trivial bb4 project that can be used as a template when creating new bb4 projects. 
+# bb4-expression
 
-## How to use it
+This library project for parsing mathematical expressions.
 
-1. First create a new bb4-\<new project\> repository in github with no files in it.
-1. Then either
-   * Create a [bare clone](https://help.github.com/articles/duplicating-a-repository/) and modify it, or
-   * Manually copy the project files from a clone of bb4-project-template into a new clone of the empty bb4-\<new project\> 
- directory on the file system. Do not copy the iml file or the following directories:
-     * .* (.git, .gradle, .idea) 
-     * build
-     * gradle
-     * out
-   
-   I prefer the second approach because then it will not have the git history from bb4-project-template.
-   
-1. Lastly, open the new project in intellij by opening the build.gradle file. In the import dialog, select the option to use the gradle wrapper instead of specifying the location of gradle. Now you have a working project to start from. Just modify it as needed to create your new bb4 project.
+To use, include this dependency in your gradle file
 
-     
- 
+`compile 'com.barrybecker4:bb4-expression:<version>`
+
+### [How to Build](https://github.com/barrybecker4/bb4-common/wiki/Building-bb4-Projects)
+If you have not already done so, first install [Git](http://git-scm.com/) and [Intellij](http://www.jetbrains.com/idea/).
+You also need to have [java SDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html) installed and set the JAVA_HOME environment variable to point to the location where it is installed.
+
+Type 'gradlew build' at the root (prepend with ./ if running on Cygwin or Linux). This will build everything, but since it is a library project there won't be much to see. 
+
+When there is a new release, versioned artifacts will be published by Barry Becker to [Sonatype](https://oss.sonatype.org).
+
+### License
+All source (unless otherwise specified in individual file) is provided under the [MIT License](http://www.opensource.org/licenses/MIT)
