@@ -19,7 +19,7 @@ class TreeSerializerSuite extends FunSuite {
     }
   }
 
-  test("indented serialize simpleexpression") {
+  test("indented serialize simplee xpression") {
     val opDef = new MathOperatorsDefinition
     val node: TreeNode = new TreeNode("*", opDef)
     node.children = Seq(new TreeNode("x", opDef), new TreeNode("3", opDef))
