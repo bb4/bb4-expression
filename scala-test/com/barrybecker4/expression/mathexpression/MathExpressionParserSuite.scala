@@ -115,7 +115,7 @@ class MathExpressionParserSuite extends FunSuite {
 
   private def verifyParse(exp: String, expSerializedStr: String): Unit = {
     val root = parser.parse(exp)
-    val serialized = serializer.serialize(root)
+    val serialized = serializer.regularSerialize(root)
     assertResult(expSerializedStr) { serialized }
   }
 }

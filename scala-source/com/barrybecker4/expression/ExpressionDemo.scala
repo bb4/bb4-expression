@@ -15,5 +15,5 @@ object ExpressionDemo extends App {
   val tree = parser.parse(inputExp)
 
   println("\nThe parsed expression is:")
-  println(new TreeSerializer().serialize(tree));
+  println(new TreeSerializer().regularSerialize(tree));
 }
