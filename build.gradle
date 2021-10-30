@@ -15,7 +15,7 @@ plugins {
 }
 description = 'Library for parsing mathematical expressions'
 group = 'com.barrybecker4'
-version = '1.6-SNAPSHOT'
+version = '1.6'
 ext {
     archivesBaseName = 'bb4-expression'
     mainClass = 'com.barrybecker4.expression.ExpressionDemo'
@@ -31,7 +31,6 @@ task runExpressionDemo(type: JavaExec, dependsOn: classes) {
 }
 
 dependencies {
-    //compile 'com.barrybecker4:bb4-common:1.6-SNAPSHOT'
 }
 
 apply from: project.buildscript.classLoader.getResource('bb4-publish.gradle').toURI()
