@@ -6,7 +6,6 @@ buildscript {
     }
     dependencies {
         classpath 'com.barrybecker4:bb4-gradle:1.6.2'
-
     }
 }
 
@@ -15,7 +14,7 @@ plugins {
 }
 description = 'Library for parsing mathematical expressions'
 group = 'com.barrybecker4'
-version = '1.6'
+version = '1.7-SNAPSHOT'
 ext {
     archivesBaseName = 'bb4-expression'
     mainClass = 'com.barrybecker4.expression.ExpressionDemo'

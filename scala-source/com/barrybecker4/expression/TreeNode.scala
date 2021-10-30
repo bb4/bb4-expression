@@ -20,13 +20,13 @@ class TreeNode {
   /** Constructor
     * @param  value data value - either an operator or an operand.
     */
-  def this(value: String, opDef: OperatorsDefinition) {
+  def this(value: String, opDef: OperatorsDefinition) = {
     this()
     data = value
     this.opDef = opDef
   }
 
-  def this(value: Char, opDef: OperatorsDefinition) {
+  def this(value: Char, opDef: OperatorsDefinition) = {
     this()
     data = Character.toString(value)
     this.opDef = opDef
