@@ -41,7 +41,7 @@ abstract class ExpressionParser(var opDef: OperatorsDefinition) {
     var parenCount = 1
     var i = pos
     var ch = 0
-    do {
+    while (!(ch == RIGHT_PAREN.symbol && parenCount == 0) && i < exp.length) {
       ch = exp.charAt(i)
       i += 1
       if (ch == LEFT_PAREN.symbol) {
@@ -50,7 +50,7 @@ abstract class ExpressionParser(var opDef: OperatorsDefinition) {
       if (ch == RIGHT_PAREN.symbol) {
         parenCount -= 1
       }
-    } while (!(ch == RIGHT_PAREN.symbol && parenCount == 0) && i < exp.length)
+    }
 
     if (ch != RIGHT_PAREN.symbol && i == exp.length)
       throw new IllegalStateException("Mismatched parenthesis in " + exp)

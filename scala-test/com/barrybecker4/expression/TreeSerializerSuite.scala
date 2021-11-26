@@ -2,10 +2,11 @@ package com.barrybecker4.expression
 
 import com.barrybecker4.expression.mathexpression.{MathExpressionParser, MathOperatorsDefinition}
 import com.barrybecker4.testsupport.strip
-import org.scalatest.FunSuite
+import org.scalatest.Assertions.assertResult
+import org.scalatest.funsuite.AnyFunSuite
 
 
-class TreeSerializerSuite extends FunSuite {
+class TreeSerializerSuite extends AnyFunSuite {
 
   val serializer = new TreeSerializer
 

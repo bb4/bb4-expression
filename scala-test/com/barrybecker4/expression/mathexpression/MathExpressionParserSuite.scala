@@ -5,14 +5,14 @@ package com.barrybecker4.expression.mathexpression
 
 import com.barrybecker4.expression.TreeSerializer
 import com.barrybecker4.testsupport.strip
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 
 /**
   * Ported from flex project.
   * @author Barry Becker
   */
-class MathExpressionParserSuite extends FunSuite {
+class MathExpressionParserSuite extends AnyFunSuite {
   val opDef = new MathOperatorsDefinition
   /** instance under test */
   private val parser = new MathExpressionParser(opDef)

@@ -1,20 +1,19 @@
 buildscript {
     repositories {
-        // retrieve the shared gradle build scripts from here
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/"}
         maven { url "https://oss.sonatype.org/content/repositories/releases" }
     }
     dependencies {
-        classpath 'com.barrybecker4:bb4-gradle:1.6.2'
+        classpath 'com.barrybecker4:bb4-gradle:1.7'
     }
 }
 
 plugins {
-    id "com.github.maiflai.scalatest" version "0.26" // needed to run scala tests
+    id "com.github.maiflai.scalatest" version "0.31" // needed to run scala tests
 }
 description = 'Library for parsing mathematical expressions'
 group = 'com.barrybecker4'
-version = '1.7-SNAPSHOT'
+version = '1.7'
 ext {
     archivesBaseName = 'bb4-expression'
     mainClass = 'com.barrybecker4.expression.ExpressionDemo'
@@ -24,7 +23,7 @@ apply from: project.buildscript.classLoader.getResource('bb4.gradle').toURI()
 
 task runExpressionDemo(type: JavaExec, dependsOn: classes) {
     group = 'application'
-    main = 'com.barrybecker4.expression.ExpressionDemo'
+    mainClassName = 'com.barrybecker4.expression.ExpressionDemo'
     classpath = sourceSets.main.runtimeClasspath
     standardInput = System.in
 }
