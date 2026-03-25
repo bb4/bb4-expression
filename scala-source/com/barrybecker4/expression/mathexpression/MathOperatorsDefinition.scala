@@ -1,15 +1,16 @@
 /* Copyright by Barry G. Becker, 2000-2018. Licensed under MIT License: http://www.opensource.org/licenses/MIT  */
 package com.barrybecker4.expression.mathexpression
 
-import com.barrybecker4.expression.{Operator, OperatorsDefinition, TreeNode}
-import com.barrybecker4.expression.mathexpression.MathOperatorsDefinition.SYMBOLS
-
-import scala.collection.mutable.ListBuffer
+import com.barrybecker4.expression.{Operator, OperatorsDefinition, ParseListItem, PlOperand, PlOperator}
 
 object MathOperatorsDefinition {
 
-  /** Defines the order of precedence for the operators
-    * This at the same level are evaluated from left to right.
+  /**
+    * Operator precedence groups; within each group reduction is left-to-right.
+    *
+    * '''Note on `^`''' — many mathematical notations treat exponentiation as right-associative
+    * (`a^b^c` as `a^(b^c)`). This library evaluates the same string as `((a^b)^c)` (left-associative
+    * reduction), which matches the historical behavior tested in `MathExpressionParserExtendedSuite`.
     */
   private val OPERATOR_PRECEDENCE = Array(
     Array[Operator](EXPONENT),
@@ -21,17 +22,17 @@ object MathOperatorsDefinition {
 }
 
 /**
-  * The expected binary operators in the text expression.
-  * @author Barry Becker
+  * Binary operators and precedence for [[MathExpressionParser]].
   */
 class MathOperatorsDefinition extends OperatorsDefinition {
 
   override def getOperatorPrecedence: Array[Array[Operator]] = MathOperatorsDefinition.OPERATOR_PRECEDENCE
 
-  /** @return true if the specified character is an operator */
-  override def isOperator(ch: Char): Boolean = SYMBOLS.contains(ch)
+  override def isOperator(ch: Char): Boolean = MathOperatorsDefinition.SYMBOLS.contains(ch)
 
-  /** @return true if the last node is an operator or there were no previous nodes  */
-  override def isLastNodeOperator(nodes: ListBuffer[TreeNode]): Boolean =
-    nodes.isEmpty || nodes.last.isOperator
+  override def isLastNodeOperator(nodes: scala.collection.Seq[ParseListItem]): Boolean =
+    nodes.isEmpty ||
+      (nodes.last match
+        case PlOperator(_) => true
+        case PlOperand(_)  => false)
 }

@@ -3,7 +3,7 @@
  */
 package com.barrybecker4.expression.mathexpression
 
-import com.barrybecker4.expression.TreeSerializer
+import com.barrybecker4.expression.{ParseError, TreeSerializer}
 import com.barrybecker4.testsupport.strip
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
@@ -137,8 +137,9 @@ class MathExpressionParserExtendedSuite extends AnyFunSuite {
   }
 
   test("reject unknown variable letter") {
-    val ex = Assertions.intercept[IllegalArgumentException](parser.parse("y+1"))
+    val ex = Assertions.intercept[ParseError](parser.parse("y+1"))
     assert(ex.getMessage.contains("Unexpected character"))
+    assertResult(0)(ex.offset)
   }
 
   test("reject extra closing parenthesis") {
@@ -168,7 +169,7 @@ class MathExpressionParserExtendedSuite extends AnyFunSuite {
   }
 
   test("findClosingParen: early exit on open brace without close in nested scan") {
-    Assertions.intercept[IllegalStateException](parser.parse("((x+1)"))
+    Assertions.intercept[ParseError](parser.parse("((x+1)"))
   }
 
   // --- parse == parse (idempotent string round-trip shape) ---

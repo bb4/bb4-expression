@@ -1,5 +1,6 @@
 package com.barrybecker4.expression
 
+import com.barrybecker4.expression.{Expression, ParseError}
 import com.barrybecker4.expression.mathexpression.MathExpressionParser
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
@@ -24,6 +25,6 @@ class ExpressionSuite extends AnyFunSuite {
 
   test("getRootNode throws when parse failed") {
     val ex = Expression("(", parser)
-    Assertions.assertThrows[IllegalStateException](ex.getRootNode)
+    Assertions.assertThrows[ParseError](ex.getRootNode)
   }
 }

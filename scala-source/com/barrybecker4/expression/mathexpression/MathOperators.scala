@@ -27,3 +27,17 @@ case object DIVIDE extends Operator('/') {
 case object EXPONENT extends Operator('^') {
   override def operate(operand1: Double, operand2: Double): Double = math.pow(operand1,  operand2)
 }
+
+object MathOperators {
+
+  /** @throws IllegalArgumentException if `symbol` is not one of `+ - * / ^` */
+  def operatorFor(symbol: Char): Operator =
+    symbol match
+      case '+' => PLUS
+      case '-' => MINUS
+      case '*' => TIMES
+      case '/' => DIVIDE
+      case '^' => EXPONENT
+      case _ =>
+        throw new IllegalArgumentException("Not an operator symbol: " + symbol)
+}

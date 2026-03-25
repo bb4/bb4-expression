@@ -3,43 +3,31 @@ package com.barrybecker4.expression
 
 import scala.collection.mutable.ListBuffer
 
-
 /**
   * Parses the text form of an expression into a tree representation.
   * See derived classes for specific sorts of expression parsers.
   * Called recursively to parse sub-expressions nested within parenthesis.
-  * @author Barry Becker
   */
-abstract class ExpressionParser(var opDef: OperatorsDefinition) {
+abstract class ExpressionParser(val opDef: OperatorsDefinition) {
 
   /** @param textExpression the expression to parse. Must not be null or empty.
-    * @return the root node in the parsed expression tree.
+    * @return the root [[Expr]] of the parsed expression tree.
     */
-  def parse(textExpression: String): TreeNode = {
+  def parse(textExpression: String): Expr = {
     if (textExpression == null)
       throw new IllegalArgumentException("Expression must not be null")
     val exp = textExpression.trim
     if (exp.isEmpty)
       throw new IllegalArgumentException("Expression must not be empty")
     val nodes = getNodesAtLevel(exp)
-    makeTreeFromNodes(nodes)
+    makeTreeFromNodes(nodes.toSeq)
   }
 
-  /** Recursive method to find all the tree nodes for the terms at the current parenthesized level.
-    * For example, given this expression
-    * 2x^3 +  5(x + 3x^2) / (x - 1)
-    * The items in []'s represent the array of nodes returned.
-    * [2] [*] [x] [^] [3] [+] [5][*][x + 3x^2] [/] [x - 1]
-    * The parts that were in ()'s become their own subtrees via recursive calls.
-    * Throws Error if there is a syntax error causing the expression to be invalid.
-    *
-    * @param exp the expression to get the nodes at the current level for
-    * @return array of nodes representing terms that the current level.
-    */
-  protected def getNodesAtLevel(exp: String): ListBuffer[TreeNode]
+  /** Recursive method to find all cells for the terms at the current parenthesized level. */
+  protected def getNodesAtLevel(exp: String): ListBuffer[ParseListItem]
 
-  /** @param exp the whole sup expression
-    * @param pos location of lef parenthesis
+  /** @param exp the whole sub expression
+    * @param pos location of left parenthesis (the `(` in the source)
     * @return location of matching right parenthesis
     */
   protected def findClosingParen(exp: String, pos: Int): Int = {
@@ -58,7 +46,7 @@ abstract class ExpressionParser(var opDef: OperatorsDefinition) {
     }
 
     if (ch != LexToken.RightParen.symbol && i == exp.length)
-      throw new IllegalStateException("Mismatched parenthesis in " + exp)
+      throw new ParseError(pos, "Mismatched parenthesis", exp)
     i - 1
   }
 
@@ -66,34 +54,25 @@ abstract class ExpressionParser(var opDef: OperatorsDefinition) {
     * @return current token. May have been reset to "".
     */
   protected def processSubExpression(exp: String, pos: Int, token: String,
-                                     closingParenPos: Int, nodes: ListBuffer[TreeNode]): String
+                                     closingParenPos: Int, nodes: ListBuffer[ParseListItem]): String
 
-  /** The token may represent several nodes because of implicit multiplication.
-    * For example,
-    * -4x should become  [-4] [times] [x]
-    * -x should become [-1] [times] [x]
-    * @param token the token to parse
-    * @param nodes array of nodes that the token was parsed into.
-    */
-  protected def pushNodesForToken(token: String, nodes: ListBuffer[TreeNode]): Unit
+  /** The token may represent several cells because of implicit multiplication. */
+  protected def pushNodesForToken(token: String, nodes: ListBuffer[ParseListItem], exp: String, tokenEndPos: Int): Unit
 
-  /** Converts a list of nodes to a single node by reducing them to
-    * subtrees in order of operator precedence.
-    */
-  protected def makeTreeFromNodes(nodes: ListBuffer[TreeNode]): TreeNode
+  /** Converts a flat list to a single [[Expr]] by reducing in order of operator precedence. */
+  protected def makeTreeFromNodes(nodes: Seq[ParseListItem]): Expr
 
-  protected def splice(nodes: ListBuffer[TreeNode], start: Int, num: Int, newNode: TreeNode): Unit = {
+  protected def splice(nodes: ListBuffer[ParseListItem], start: Int, num: Int, newCell: ParseListItem): Unit = {
     var i = start
     while (i < start + num) {
       nodes.remove(start)
       i += 1
     }
-    nodes.insert(start, newNode)
+    nodes.insert(start, newCell)
   }
 
-  protected def isOperator(node: TreeNode, ops: Array[Operator]): Boolean = {
-    if (node.getData == null || node.getData.length != 1) return false
-    val c = node.getData.charAt(0)
-    ops.exists(_.symbol == c)
-  }
+  protected def isOperatorCell(item: ParseListItem, ops: Array[Operator]): Boolean =
+    item match
+      case PlOperator(o) => ops.contains(o)
+      case _             => false
 }

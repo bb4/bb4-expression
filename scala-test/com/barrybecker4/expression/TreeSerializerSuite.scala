@@ -1,10 +1,9 @@
 package com.barrybecker4.expression
 
-import com.barrybecker4.expression.mathexpression.{MathExpressionParser, MathOperatorsDefinition}
+import com.barrybecker4.expression.mathexpression.{MathExpressionParser, MathOperatorsDefinition, TIMES, PLUS}
 import com.barrybecker4.testsupport.strip
 import org.scalatest.Assertions.assertResult
 import org.scalatest.funsuite.AnyFunSuite
-
 
 class TreeSerializerSuite extends AnyFunSuite {
 
@@ -19,24 +18,17 @@ class TreeSerializerSuite extends AnyFunSuite {
   }
 
   test("regular serialize expression") {
-    val opDef = new MathOperatorsDefinition
-    val node: TreeNode = new TreeNode("*", opDef)
-    node.children = Seq(new TreeNode("x", opDef), new TreeNode("3", opDef))
-
-    assertResult("x * 3") {
-      serializer.regularSerialize(node)
+    val expr = BinOp(TIMES, X, Const(3))
+    assertResult("x * 3.0") {
+      serializer.regularSerialize(expr)
     }
   }
 
-  test("indented serialize simplee xpression") {
-    val opDef = new MathOperatorsDefinition
-    val node: TreeNode = new TreeNode("*", opDef)
-    node.children = Seq(new TreeNode("x", opDef), new TreeNode("3", opDef))
+  test("indented serialize simple expression") {
+    val inner = BinOp(TIMES, X, Const(3))
+    val root = BinOp(PLUS, X, inner)
 
-    val root = new TreeNode("+", opDef)
-    root.children = Seq(new TreeNode("x", opDef), node)
-
-    assertResult("x + x * 3") {
+    assertResult("x + x * 3.0") {
       serializer.indentedSerialize(root)
     }
   }

@@ -3,7 +3,7 @@
  */
 package com.barrybecker4.expression.mathexpression
 
-import com.barrybecker4.expression.TreeSerializer
+import com.barrybecker4.expression.{ParseError, TreeSerializer}
 import com.barrybecker4.testsupport.strip
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
@@ -110,7 +110,7 @@ class MathExpressionParserSuite extends AnyFunSuite {
   }
 
   test("parse rejects mismatched parenthesis") {
-    val ex = Assertions.intercept[IllegalStateException](parser.parse("(x+1"))
+    val ex = Assertions.intercept[ParseError](parser.parse("(x+1"))
     assert(ex.getMessage.contains("Mismatched"))
   }
 
