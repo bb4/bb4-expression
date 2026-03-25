@@ -1,27 +1,34 @@
 // Copyright by Barry G. Becker, 2000-2018. Licensed under MIT License: http://www.opensource.org/licenses/MIT
 package com.barrybecker4.expression
 
+import scala.util.Try
+
 /**
   * Creates a tree from a text representation of an expression that is written in terms of x.
-  * @param expressionText the expression in text form. It will be parsed.
+  * Use the companion `Expression.apply` factory so parse failures are recorded instead of printed.
   * @author Barry Becker
   */
-class Expression[T <: Operator](val expressionText: String, val parser: ExpressionParser) {
+object Expression:
 
-  /** root of the binary tree representing the expression */
-  private var rootNode: TreeNode = _
-  private var valid = false
+  /** Parse `expressionText` with `parser`; failures are available via `parseFailure`. */
+  def apply[T <: Operator](expressionText: String, parser: ExpressionParser): Expression[T] =
+    new Expression(expressionText, parser, Try(parser.parse(expressionText)))
 
-  def isValid: Boolean = this.valid
-  def getRootNode: TreeNode = rootNode
+class Expression[T <: Operator] private (
+    val expressionText: String,
+    val parser: ExpressionParser,
+    private val parseResult: Try[TreeNode]
+) {
 
-  try {
-    rootNode = parser.parse(expressionText)
-    valid = true
-  } catch {
-    case e: Exception =>
-      valid = false
-      e.printStackTrace()
-  }
+  def isValid: Boolean = parseResult.isSuccess
+
+  /** The root of the parse tree, if parsing succeeded. */
+  def rootNode: Option[TreeNode] = parseResult.toOption
+
+  /** @throws java.util.NoSuchElementException if parsing failed */
+  def getRootNode: TreeNode = parseResult.get
+
+  /** If parsing failed, the captured error (no stack trace is printed by this type). */
+  def parseFailure: Option[Throwable] = parseResult.failed.toOption
 
 }

@@ -1,7 +1,13 @@
 /* Copyright by Barry G. Becker, 2000-2018. Licensed under MIT License: http://www.opensource.org/licenses/MIT */
 package com.barrybecker4.expression.mathexpression
 
-import com.barrybecker4.expression.{LEFT_PAREN, RIGHT_PAREN, _}
+import com.barrybecker4.expression.{
+  ExpressionParser,
+  LexToken,
+  Operator,
+  OperatorsDefinition,
+  TreeNode,
+}
 
 import scala.collection.mutable.ListBuffer
 
@@ -19,47 +25,47 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
     * the items in []'s represent the array of nodes returned.
     * [2] [*] [x] [^] [3] [+] [5][*][x + 3x^2] [/] [x - 1]
     * The parts that were in ()'s become their own subtrees via recursive calls.
-    * Throws an Error if there is a syntax error causing the expression to be invalid
+    * Throws `IllegalArgumentException` if there is a syntax error causing the expression to be invalid.
     *
     * @param exp the expression to get the nodes at the current level for
     * @return array of nodes representing terms that the current level.
     */
-  override protected def getNodesAtLevel(exp: String): ListBuffer[TreeNode] = {
-    var pos = 0
+  override protected def getNodesAtLevel(exp: String): ListBuffer[TreeNode] =
+    scanLevel(exp)
+
+  /** Tokenize one parenthesis nesting level into operand/operator nodes. */
+  private def scanLevel(exp: String): ListBuffer[TreeNode] = {
     val nodes = ListBuffer[TreeNode]()
+    var pos = 0
     var token = ""
     var ch = exp.charAt(pos)
-    while (pos < exp.length && !(token == "" + RIGHT_PAREN.symbol)) {
-      if (ch == ' ') {
-        // spaces are ignored
+    val closingToken = "" + LexToken.RightParen.symbol
+    while (pos < exp.length && token != closingToken) {
+      ch match {
+        case ' ' =>
+        case c if c == LexToken.LeftParen.symbol =>
+          val closingParenPos = findClosingParen(exp, pos + 1)
+          token = processSubExpression(exp, pos + 1, token, closingParenPos, nodes)
+          pos = closingParenPos + 1
+        case c if c == MINUS.symbol && token.isEmpty && opDef.isLastNodeOperator(nodes) =>
+          token += c
+        case c if isNumericChar(c) =>
+          token += c
+          if (token.contains("x"))
+            throw new IllegalArgumentException(
+              "Cannot have numbers after x in a term " + token + " within " + exp)
+        case 'x' =>
+          token += ch
+        case c if opDef.isOperator(c) =>
+          pushNodesForToken(token, nodes)
+          token = ""
+          nodes.append(new TreeNode(c, opDef))
+        case c =>
+          throw new IllegalArgumentException("Unexpected character '" + c + "' in expression: " + exp)
       }
-      else if (ch == LEFT_PAREN.symbol) {
-        val closingParenPos = findClosingParen(exp, pos + 1)
-        // this method will make the recursive call
-        token = processSubExpression(exp, pos + 1, token, closingParenPos, nodes)
-        pos = closingParenPos + 1
-      }
-      else if (ch == MINUS.symbol && token.length == 0 && opDef.isLastNodeOperator(nodes)) {
-        // a leading minus sign
-        token += ch
-      }
-      else if (isNumericChar(ch)) {
-        token += ch
-        if (token.contains("x")) {
-          throw new Error("Cannot have numbers after x in a term " + token + " within " + exp)
-        }
-      }
-      else if (ch == 'x') token += ch
-      else if (opDef.isOperator(ch)) {
-        pushNodesForToken(token, nodes)
-        token = ""
-        nodes.append(new TreeNode(ch, opDef))
-      }
-      else throw new Error("Unexpected character '" + ch + "' in expression: " + exp)
       pos += 1
       if (pos < exp.length) ch = exp.charAt(pos)
     }
-    // add the final node
     pushNodesForToken(token, nodes)
     nodes
   }
@@ -114,13 +120,13 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
   override protected def makeTreeFromNodes(theNodes: ListBuffer[TreeNode]): TreeNode = {
     var nodes = theNodes
     for (ops <- opDef.getOperatorPrecedence) {
-      //System.out.println("nodes=" + nodes + " ops=" + ops.mkString(", "))
       nodes = reduceNodes(ops, nodes)
     }
     if (nodes.size > 1)
-      throw new Error("Expected to have only one node after reducing, but have " + nodes.size + " : " + nodes)
+      throw new IllegalArgumentException(
+        "Expected to have only one node after reducing, but have " + nodes.size + " : " + nodes)
     if (nodes.head.isOperator && nodes.head.children.isEmpty)
-      throw new Error("Missing operands")
+      throw new IllegalArgumentException("Missing operands")
     nodes.head
   }
 
@@ -132,13 +138,13 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
     */
   private def reduceNodes(ops: Array[Operator], nodes: ListBuffer[TreeNode]) = {
     var index = 1
-    if (nodes.size == 2) throw new Error("Missing operand : " + nodes)
+    if (nodes.size == 2)
+      throw new IllegalArgumentException("Missing operand : " + nodes)
     while (index < nodes.size) if (isOperator(nodes(index), ops)) {
+      if (index + 1 >= nodes.size)
+        throw new IllegalArgumentException("Not enough operands for operator in nodes=" + nodes)
       nodes(index).children = Seq(nodes(index - 1), nodes(index + 1))
-      if (nodes.size < index + 1) throw new Error("Not enough operands for operator in nodes=" + nodes)
-      //System.out.println("before splice : " + nodes);
       splice(nodes, index - 1, 3, nodes(index))
-      //System.out.println("after splice : " + nodes);
     }
     else index += 2
     nodes

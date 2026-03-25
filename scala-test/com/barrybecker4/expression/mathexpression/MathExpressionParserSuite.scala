@@ -5,6 +5,7 @@ package com.barrybecker4.expression.mathexpression
 
 import com.barrybecker4.expression.TreeSerializer
 import com.barrybecker4.testsupport.strip
+import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
 
 
@@ -24,8 +25,8 @@ class MathExpressionParserSuite extends AnyFunSuite {
     verifyParse("x")
   }
 
-  test("NegXExp(") {
-    verifyParse("x")
+  test("NegXExp") {
+    verifyParse("-x", "-1 * x")
   }
 
   test("ConstantIntOnlyExp(") {
@@ -90,6 +91,31 @@ class MathExpressionParserSuite extends AnyFunSuite {
 
   test("5X") {
     verifyParse("5x", "5.0 * x")
+  }
+
+  test("multiplication binds tighter than addition") {
+    verifyParse("2 + 3 * 4", "2.0 + 3.0 * 4.0")
+  }
+
+  test("parse rejects null expression") {
+    Assertions.intercept[IllegalArgumentException](parser.parse(null))
+  }
+
+  test("parse rejects empty expression") {
+    Assertions.intercept[IllegalArgumentException](parser.parse(""))
+  }
+
+  test("parse rejects whitespace-only expression") {
+    Assertions.intercept[IllegalArgumentException](parser.parse("   \t  "))
+  }
+
+  test("parse rejects mismatched parenthesis") {
+    val ex = Assertions.intercept[IllegalStateException](parser.parse("(x+1"))
+    assert(ex.getMessage.contains("Mismatched"))
+  }
+
+  test("mixed exponent subtraction and multiplication") {
+    verifyParse("x ^ x - 3 * x", "x ^ x - 3.0 * x")
   }
 
   test("ComplexNestedExp") {

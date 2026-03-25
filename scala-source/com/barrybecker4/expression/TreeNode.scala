@@ -1,6 +1,8 @@
 /* Copyright by Barry G. Becker, 2000-2018. Licensed under MIT License: http://www.opensource.org/licenses/MIT */
 package com.barrybecker4.expression
 
+import scala.compiletime.uninitialized
+
 /**
   * A node in a binary tree.
   * Contains either a operator (non-leaf) or operand (at leaf).
@@ -14,8 +16,8 @@ class TreeNode {
   var hasParens = false
 
   /** either an operator or an operand */
-  private var data: String = _
-  private var opDef: OperatorsDefinition = _
+  private var data: String = uninitialized
+  private var opDef: OperatorsDefinition = uninitialized
 
   /** Constructor
     * @param  value data value - either an operator or an operand.

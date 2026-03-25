@@ -16,7 +16,12 @@ abstract class ExpressionParser(var opDef: OperatorsDefinition) {
     * @return the root node in the parsed expression tree.
     */
   def parse(textExpression: String): TreeNode = {
-    val nodes = getNodesAtLevel(textExpression)
+    if (textExpression == null)
+      throw new IllegalArgumentException("Expression must not be null")
+    val exp = textExpression.trim
+    if (exp.isEmpty)
+      throw new IllegalArgumentException("Expression must not be empty")
+    val nodes = getNodesAtLevel(exp)
     makeTreeFromNodes(nodes)
   }
 
@@ -41,18 +46,18 @@ abstract class ExpressionParser(var opDef: OperatorsDefinition) {
     var parenCount = 1
     var i = pos
     var ch = 0
-    while (!(ch == RIGHT_PAREN.symbol && parenCount == 0) && i < exp.length) {
+    while (!(ch == LexToken.RightParen.symbol && parenCount == 0) && i < exp.length) {
       ch = exp.charAt(i)
       i += 1
-      if (ch == LEFT_PAREN.symbol) {
+      if (ch == LexToken.LeftParen.symbol) {
         parenCount += 1
       }
-      if (ch == RIGHT_PAREN.symbol) {
+      if (ch == LexToken.RightParen.symbol) {
         parenCount -= 1
       }
     }
 
-    if (ch != RIGHT_PAREN.symbol && i == exp.length)
+    if (ch != LexToken.RightParen.symbol && i == exp.length)
       throw new IllegalStateException("Mismatched parenthesis in " + exp)
     i - 1
   }
@@ -88,6 +93,7 @@ abstract class ExpressionParser(var opDef: OperatorsDefinition) {
 
   protected def isOperator(node: TreeNode, ops: Array[Operator]): Boolean = {
     if (node.getData == null || node.getData.length != 1) return false
-    opDef.isOperator(node.getData.charAt(0))
+    val c = node.getData.charAt(0)
+    ops.exists(_.symbol == c)
   }
 }

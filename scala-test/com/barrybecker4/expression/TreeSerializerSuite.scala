@@ -41,8 +41,6 @@ class TreeSerializerSuite extends AnyFunSuite {
     val parser = new MathExpressionParser(opDef)
     val root = parser.parse(str)
     val serialized = serializer.indentedSerialize(root)
-    println("serialized = \n" + serialized)
-    println("-----done")
 
     val expected =
       strip("""1.0 + (
@@ -52,8 +50,8 @@ class TreeSerializerSuite extends AnyFunSuite {
         |      x ^ 2.0 - 1.0
         |    )
         |  ) / (
-        |  2.0 * x + 4.0
-        |)""")
+        |    2.0 * x + 4.0
+        |  )""")
 
     assertResult(expected) { strip(serialized) }
   }
