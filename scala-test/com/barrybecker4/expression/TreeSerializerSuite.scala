@@ -10,6 +10,14 @@ class TreeSerializerSuite extends AnyFunSuite {
 
   val serializer = new TreeSerializer
 
+  test("regular serialize null node yields empty string") {
+    assertResult("")(serializer.regularSerialize(null))
+  }
+
+  test("indented serialize null node yields empty string") {
+    assertResult("")(serializer.indentedSerialize(null))
+  }
+
   test("regular serialize expression") {
     val opDef = new MathOperatorsDefinition
     val node: TreeNode = new TreeNode("*", opDef)

@@ -25,7 +25,7 @@ class Expression[T <: Operator] private (
   /** The root of the parse tree, if parsing succeeded. */
   def rootNode: Option[TreeNode] = parseResult.toOption
 
-  /** @throws java.util.NoSuchElementException if parsing failed */
+  /** @throws Exception the same exception that a direct parse would throw if parsing failed */
   def getRootNode: TreeNode = parseResult.get
 
   /** If parsing failed, the captured error (no stack trace is printed by this type). */

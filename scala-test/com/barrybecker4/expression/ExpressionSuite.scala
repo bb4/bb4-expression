@@ -1,6 +1,7 @@
 package com.barrybecker4.expression
 
 import com.barrybecker4.expression.mathexpression.MathExpressionParser
+import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
 
 class ExpressionSuite extends AnyFunSuite {
@@ -19,5 +20,10 @@ class ExpressionSuite extends AnyFunSuite {
     assert(!ex.isValid)
     assert(ex.rootNode.isEmpty)
     assert(ex.parseFailure.isDefined)
+  }
+
+  test("getRootNode throws when parse failed") {
+    val ex = Expression("(", parser)
+    Assertions.assertThrows[IllegalStateException](ex.getRootNode)
   }
 }

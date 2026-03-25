@@ -46,15 +46,18 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
         case c if c == LexToken.LeftParen.symbol =>
           val closingParenPos = findClosingParen(exp, pos + 1)
           token = processSubExpression(exp, pos + 1, token, closingParenPos, nodes)
-          pos = closingParenPos + 1
+          // Leave `pos` on `)`; the common `pos += 1` advances to the first char after the group.
+          pos = closingParenPos
         case c if c == MINUS.symbol && token.isEmpty && opDef.isLastNodeOperator(nodes) =>
           token += c
         case c if isNumericChar(c) =>
-          token += c
+          appendImplicitTimesAfterParen(nodes, token)
+          token += ch
           if (token.contains("x"))
             throw new IllegalArgumentException(
               "Cannot have numbers after x in a term " + token + " within " + exp)
         case 'x' =>
+          appendImplicitTimesAfterParen(nodes, token)
           token += ch
         case c if opDef.isOperator(c) =>
           pushNodesForToken(token, nodes)
@@ -149,6 +152,11 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
     else index += 2
     nodes
   }
+
+  /** Juxtaposition after a closed `(...)` group, e.g. `(x+1)x` or `(x+1)2`. */
+  private def appendImplicitTimesAfterParen(nodes: ListBuffer[TreeNode], token: String): Unit =
+    if (token.isEmpty && nodes.nonEmpty && nodes.last.hasParens)
+      nodes.append(new TreeNode(TIMES.symbol, opDef))
 
   private def isNumericChar(ch: Char) = (ch >= '0' && ch <= '9') || ch == '.'
 
