@@ -1,34 +1,14 @@
-buildscript {
-    repositories {
-        maven { url "https://oss.sonatype.org/content/repositories/snapshots/"}
-        maven { url "https://oss.sonatype.org/content/repositories/releases" }
-    }
-    dependencies {
-        classpath 'com.barrybecker4:bb4-gradle:1.7'
-    }
+plugins {
+    id 'com.barrybecker4.bb4.scala-library' version '2.0-SNAPSHOT'
+    id 'com.barrybecker4.bb4.publish' version '2.0-SNAPSHOT'
+    id 'com.barrybecker4.bb4.application' version '2.0-SNAPSHOT'
 }
 
-plugins {
-    id "com.github.maiflai.scalatest" version "0.31" // needed to run scala tests
-}
 description = 'Library for parsing mathematical expressions'
 group = 'com.barrybecker4'
-version = '1.7'
-ext {
-    archivesBaseName = 'bb4-expression'
-    mainClass = 'com.barrybecker4.expression.ExpressionDemo'
+version = '2.0-SNAPSHOT'
+
+bb4 {
+    archivesBaseName.set('bb4-expression')
+    mainClass.set('com.barrybecker4.expression.ExpressionDemo')
 }
-
-apply from: project.buildscript.classLoader.getResource('bb4.gradle').toURI()
-
-task runExpressionDemo(type: JavaExec, dependsOn: classes) {
-    group = 'application'
-    mainClassName = 'com.barrybecker4.expression.ExpressionDemo'
-    classpath = sourceSets.main.runtimeClasspath
-    standardInput = System.in
-}
-
-dependencies {
-}
-
-apply from: project.buildscript.classLoader.getResource('bb4-publish.gradle').toURI()

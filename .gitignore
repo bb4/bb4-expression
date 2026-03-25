@@ -8,3 +8,6 @@ bin/
 *.iml
 *.iws
 *.ipr
+.vscode/settings.json
+.bloop/
+.metals/
