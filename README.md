@@ -31,4 +31,5 @@ Type 'gradlew build' at the root (prepend with ./ if running on Cygwin or Linux)
 When there is a new release, versioned artifacts will be published by Barry Becker to [Sonatype](https://oss.sonatype.org).
 
 ### License
+
 All source (unless otherwise specified in individual file) is provided under the [MIT License](http://www.opensource.org/licenses/MIT)
