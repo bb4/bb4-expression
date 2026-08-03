@@ -6,7 +6,7 @@ plugins {
 
 description = 'Library for parsing mathematical expressions'
 group = 'com.barrybecker4'
-version = '2.0.0'
+version = '2.1-SNAPSHOT'
 
 bb4 {
     archivesBaseName.set('bb4-expression')
