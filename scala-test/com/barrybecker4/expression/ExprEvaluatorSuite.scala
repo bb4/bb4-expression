@@ -21,4 +21,22 @@ class ExprEvaluatorSuite extends AnyFunSuite {
     val e = BinOp(TIMES, Const(3.0), X)
     assert(12.0 === ExprEvaluator.eval(e, 4.0))
   }
+
+  test("eval exponent via Operator.operate uses math.pow (tolerance)") {
+    val expr = parser.parse("x^3")
+    val actual = ExprEvaluator.eval(expr, 2.0)
+    assert(Math.abs(8.0 - actual) < 1e-9)
+  }
+
+  test("eval nested expression with mixed ops") {
+    // (2*x+1)^2 at x=3 → 49
+    val expr = parser.parse("(2*x+1)^2")
+    val actual = ExprEvaluator.eval(expr, 3.0)
+    assert(Math.abs(49.0 - actual) < 1e-9)
+  }
+
+  test("eval division by zero yields Infinity") {
+    val expr = parser.parse("1/x")
+    assert(ExprEvaluator.eval(expr, 0.0).isInfinity)
+  }
 }
