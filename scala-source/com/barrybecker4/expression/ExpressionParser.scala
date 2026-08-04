@@ -56,8 +56,10 @@ abstract class ExpressionParser(val opDef: OperatorsDefinition) {
   protected def pushNodesForToken(token: String, nodes: ListBuffer[ParseListItem], exp: String, tokenEndPos: Int): Unit
 
   /** Converts a flat list to a single [[Expr]] by reducing in order of operator precedence. */
-  protected def makeTreeFromNodes(nodes: Seq[ParseListItem]): Expr
+  protected def makeTreeFromNodes(nodes: Seq[ParseListItem]): Expr =
+    new PrecedenceReducer(opDef.getOperatorPrecedence).reduce(nodes)
 
+  /** Replace `num` cells starting at `start` with `newCell` (used by custom reducers). */
   protected def splice(nodes: ListBuffer[ParseListItem], start: Int, num: Int, newCell: ParseListItem): Unit = {
     nodes.remove(start, num)
     nodes.insert(start, newCell)

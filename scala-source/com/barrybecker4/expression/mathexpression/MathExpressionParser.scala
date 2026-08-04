@@ -84,41 +84,6 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
     else nodes.append(PlOperand(numberExpr(token, exp, errPos)))
   }
 
-  override protected def makeTreeFromNodes(theNodes: Seq[ParseListItem]): Expr = {
-    if (theNodes.isEmpty)
-      throw new ParseError(-1, "Empty expression fragment", "")
-    val nodes = ListBuffer.from(theNodes)
-    for (ops <- opDef.getOperatorPrecedence) {
-      reduceNodes(ops, nodes)
-    }
-    if (nodes.size > 1)
-      throw new ParseError(-1, "Expected to have only one node after reducing, but have " + nodes.size + " : " + nodes, "")
-    nodes.head match {
-      case PlOperand(e)   => e
-      case PlOperator(_) => throw new ParseError(-1, "Missing operands", "")
-    }
-  }
-
-  private def reduceNodes(ops: Array[Operator], nodes: ListBuffer[ParseListItem]): Unit = {
-    var index = 1
-    if (nodes.size == 2)
-      throw new ParseError(-1, "Missing operand : " + nodes, "")
-    while (index < nodes.size) {
-      if (isOperatorCell(nodes(index), ops)) {
-        if (index + 1 >= nodes.size)
-          throw new ParseError(-1, "Not enough operands for operator in nodes=" + nodes, "")
-        (nodes(index - 1), nodes(index), nodes(index + 1)) match {
-          case (PlOperand(l), PlOperator(op), PlOperand(r)) =>
-            val bin = BinOp(op, l, r)
-            splice(nodes, index - 1, 3, PlOperand(bin))
-          case _ =>
-            throw new ParseError(-1, "Malformed operator/operand sequence: " + nodes, "")
-        }
-      }
-      else index += 2
-    }
-  }
-
   private def appendImplicitTimesAfterParen(nodes: ListBuffer[ParseListItem], token: String): Unit =
     if (token.isEmpty && nodes.nonEmpty && endsWithGroup(nodes))
       nodes.append(PlOperator(TIMES))
