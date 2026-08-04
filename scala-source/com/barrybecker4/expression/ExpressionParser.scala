@@ -33,16 +33,12 @@ abstract class ExpressionParser(val opDef: OperatorsDefinition) {
   protected def findClosingParen(exp: String, pos: Int): Int = {
     var parenCount = 1
     var i = pos
-    var ch = 0
+    var ch = '\u0000'
     while (!(ch == LexToken.RightParen.symbol && parenCount == 0) && i < exp.length) {
       ch = exp.charAt(i)
       i += 1
-      if (ch == LexToken.LeftParen.symbol) {
-        parenCount += 1
-      }
-      if (ch == LexToken.RightParen.symbol) {
-        parenCount -= 1
-      }
+      if (ch == LexToken.LeftParen.symbol) parenCount += 1
+      if (ch == LexToken.RightParen.symbol) parenCount -= 1
     }
 
     if (ch != LexToken.RightParen.symbol && i == exp.length)
@@ -63,11 +59,7 @@ abstract class ExpressionParser(val opDef: OperatorsDefinition) {
   protected def makeTreeFromNodes(nodes: Seq[ParseListItem]): Expr
 
   protected def splice(nodes: ListBuffer[ParseListItem], start: Int, num: Int, newCell: ParseListItem): Unit = {
-    var i = start
-    while (i < start + num) {
-      nodes.remove(start)
-      i += 1
-    }
+    nodes.remove(start, num)
     nodes.insert(start, newCell)
   }
 

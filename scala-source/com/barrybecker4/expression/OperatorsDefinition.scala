@@ -12,9 +12,9 @@ trait OperatorsDefinition {
   def getOperatorPrecedence: Array[Array[Operator]]
 
   /**
+    * @param nodes uses `scala.collection.Seq` so both `ListBuffer` and immutable sequences are accepted
     * @return true if the last emitted cell is an operator token, or there are no cells yet
     *         (used for unary minus after `+`, `-`, `*`, `/`, `^`, or at start).
     */
-  /** Uses `scala.collection.Seq` so both `ListBuffer` and immutable sequences are accepted. */
   def isLastNodeOperator(nodes: scala.collection.Seq[ParseListItem]): Boolean
 }

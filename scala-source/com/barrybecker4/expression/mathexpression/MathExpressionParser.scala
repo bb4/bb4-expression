@@ -59,7 +59,7 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
     val subRoot = parse(subExp)
     val wrapped = Group(subRoot)
     var resultToken = token
-    if (token != null && token.nonEmpty) {
+    if (token.nonEmpty) {
       pushNodesForToken(token, nodes, exp, pos - 1)
       resultToken = ""
       nodes.append(PlOperator(TIMES))
@@ -71,7 +71,7 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
   }
 
   override protected def pushNodesForToken(token: String, nodes: ListBuffer[ParseListItem], exp: String, errPos: Int): Unit = {
-    if (token == null || token.isEmpty) return
+    if (token.isEmpty) return
     val len = token.length
     if (token.charAt(len - 1) == 'x') {
       if (len > 1) {
