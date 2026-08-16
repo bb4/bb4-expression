@@ -1,5 +1,7 @@
 # bb4-expression
 
+📊 [Build status for all bb4 projects](https://github.com/bb4)
+
 This library project for parsing mathematical expressions.
 
 ### Language (informal grammar)
