@@ -209,12 +209,25 @@ class MathExpressionParserExtendedSuite extends AnyFunSuite {
     Assertions.intercept[IllegalArgumentException](parser.parse("1+"))
   }
 
+  test("trailing operator points at the original text") {
+    val ex = Assertions.intercept[ParseError](parser.parse("1+"))
+    assert(ex.source === "1+")
+    assert(ex.offset === 1)
+    assert(!ex.getMessage.contains("ListBuffer"))
+  }
+
   test("reject leading binary operator after nullary start would be invalid - lone star") {
     Assertions.intercept[IllegalArgumentException](parser.parse("*3"))
   }
 
   test("reject consecutive binary operators with no operand between") {
     Assertions.intercept[IllegalArgumentException](parser.parse("1+*2"))
+  }
+
+  test("malformed operator sequence still names the original expression") {
+    val ex = Assertions.intercept[ParseError](parser.parse("1+*2"))
+    assert(ex.source === "1+*2")
+    assert(!ex.getMessage.contains("ListBuffer"))
   }
 
   test("reject malformed decimal with adjacent dots") {
@@ -225,6 +238,12 @@ class MathExpressionParserExtendedSuite extends AnyFunSuite {
 
   test("findClosingParen: early exit on open brace without close in nested scan") {
     Assertions.intercept[ParseError](parser.parse("((x+1)"))
+  }
+
+  test("extra open paren is reported against the full expression") {
+    val ex = Assertions.intercept[ParseError](parser.parse("((x)"))
+    assert(ex.source === "((x)")
+    assert(ex.getMessage.contains("Mismatched"))
   }
 
   // --- parse == parse (idempotent string round-trip shape) ---

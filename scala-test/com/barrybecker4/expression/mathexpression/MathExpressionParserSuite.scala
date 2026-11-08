@@ -161,6 +161,7 @@ class MathExpressionParserSuite extends AnyFunSuite {
   test("parse rejects mismatched parenthesis") {
     val ex = Assertions.intercept[ParseError](parser.parse("(x+1"))
     assert(ex.getMessage.contains("Mismatched"))
+    assert(ex.source === "(x+1")
   }
 
   test("mixed exponent subtraction and multiplication") {
