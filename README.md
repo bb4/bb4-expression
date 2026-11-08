@@ -22,7 +22,7 @@ Parse failures are thrown as `com.barrybecker4.expression.ParseError` (an `Illeg
 
 To use, include this dependency in your gradle file
 
-`compile 'com.barrybecker4:bb4-expression:<version>`
+`implementation 'com.barrybecker4:bb4-expression:<version>'`
 
 ### [How to Build](https://github.com/barrybecker4/bb4-common/wiki/Building-bb4-Projects)
 If you have not already done so, first install [Git](http://git-scm.com/) and [Intellij](http://www.jetbrains.com/idea/).
