@@ -22,8 +22,7 @@ class TreeSerializer {
     else
       val sb = new StringBuilder
       walk(node, depth = 0, indented, sb)
-      val s = sb.toString
-      if s.nonEmpty then s else "Invalid"
+      sb.toString
 
   /** In-order walk: `indented` controls newlines and spacing inside parenthesized subtrees. */
   private def walk(e: Expr, depth: Int, indented: Boolean, sb: StringBuilder): Unit =

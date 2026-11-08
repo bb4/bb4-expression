@@ -18,8 +18,7 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
     var pos = 0
     var token = ""
     var ch = exp.charAt(pos)
-    val closingToken = "" + LexToken.RightParen.symbol
-    while (pos < exp.length && token != closingToken) {
+    while (pos < exp.length) {
       ch match {
         case c if Character.isWhitespace(c) =>
           // Whitespace ends the current token; it must not glue digits across a gap.
