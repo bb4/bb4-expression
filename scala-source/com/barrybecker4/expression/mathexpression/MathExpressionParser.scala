@@ -58,6 +58,11 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
     val subExp = exp.substring(pos, closingParenPos)
     val subRoot = parse(subExp)
     val wrapped = Group(subRoot)
+    // Unary minus before `(...)` is one operand: -1 * (group). Do not leave "-" as a token.
+    if (token == String.valueOf(LexToken.Minus.symbol)) {
+      nodes.append(PlOperand(BinOp(TIMES, Const(-1.0), wrapped)))
+      return ""
+    }
     var resultToken = token
     if (token.nonEmpty) {
       pushNodesForToken(token, nodes, exp, pos - 1)
@@ -70,16 +75,23 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
     resultToken
   }
 
+  /**
+    * Emit one [[PlOperand]] per term. Coefficient×`x` (including unary `-x` / `-2x`) is a single
+    * pre-grouped product so a following `^` or `/` cannot reassociate through an infix `TIMES`.
+    */
   override protected def pushNodesForToken(token: String, nodes: ListBuffer[ParseListItem], exp: String, errPos: Int): Unit = {
     if (token.isEmpty) return
     val len = token.length
     if (token.charAt(len - 1) == 'x') {
-      if (len > 1) {
-        if (token.charAt(0) == LexToken.Minus.symbol) nodes.append(PlOperand(Const(-1)))
-        else nodes.append(PlOperand(numberExpr(token.substring(0, len - 1), exp, errPos)))
-        nodes.append(PlOperator(TIMES))
+      if (len == 1)
+        nodes.append(PlOperand(X))
+      else {
+        val coeffText = token.substring(0, len - 1)
+        val coeff =
+          if (coeffText == String.valueOf(LexToken.Minus.symbol)) Const(-1.0)
+          else numberExpr(coeffText, exp, errPos)
+        nodes.append(PlOperand(BinOp(TIMES, coeff, X)))
       }
-      nodes.append(PlOperand(X))
     }
     else nodes.append(PlOperand(numberExpr(token, exp, errPos)))
   }
