@@ -141,6 +141,27 @@ class MathExpressionParserExtendedSuite extends AnyFunSuite {
     verify("1  +  2  *  3", "1.0 + 2.0 * 3.0")
   }
 
+  test("space does not glue digits into one literal") {
+    val ex = Assertions.intercept[ParseError](parser.parse("2 3"))
+    assert(ex.offset > 0)
+  }
+
+  test("space does not glue decimal fragments into one literal") {
+    Assertions.intercept[ParseError](parser.parse("2 . 3"))
+  }
+
+  test("internal tabs are whitespace, same as spaces") {
+    verify("1\t+\t2", "1.0 + 2.0")
+  }
+
+  test("space before a parenthesized group is still implicit multiplication") {
+    assert(6.0 === ExprEvaluator.eval(parser.parse("2 (3)"), 0.0))
+  }
+
+  test("space before x is still implicit multiplication") {
+    verify("2 x", "2.0 * x")
+  }
+
   // --- Deep structure ---
 
   test("triply nested parens around x still parse") {
@@ -214,5 +235,29 @@ class MathExpressionParserExtendedSuite extends AnyFunSuite {
     val once = serializer.regularSerialize(parser.parse(input))
     val twice = serializer.regularSerialize(parser.parse(once))
     assertResult(once)(twice)
+  }
+
+  test("scientific notation from Double.toString round-trips") {
+    for (src <- Seq("10000000", "0.0001", "x+10000000", "x+0.0001")) {
+      val once = serializer.regularSerialize(parser.parse(src))
+      val twice = serializer.regularSerialize(parser.parse(once))
+      assert(once === twice)
+    }
+  }
+
+  test("a literal past Double range is a parse error, not Infinity") {
+    val huge = "1" + ("0" * 400)
+    val ex = intercept[ParseError](parser.parse(huge))
+    assert(ex.getMessage.toLowerCase.contains("infinite") || ex.getMessage.contains(huge.take(8)))
+  }
+
+  test("explicit exponent is accepted when the lexer allows it") {
+    assert(1.0e7 === ExprEvaluator.eval(parser.parse("1.0E7"), 0.0))
+    assert(1.0e-4 === ExprEvaluator.eval(parser.parse("1E-4"), 0.0))
+  }
+
+  test("bare e remains an unexpected character") {
+    val ex = intercept[ParseError](parser.parse("e"))
+    assert(ex.getMessage.contains("Unexpected character"))
   }
 }

@@ -4,6 +4,10 @@ package com.barrybecker4.expression
 /**
   * Renders an [[Expr]] as an infix string via recursive in-order traversal (optionally indented for
   * parenthesized binary subtrees). Use explicit cases on [[Expr]] rather than a separate visitor type.
+  *
+  * Parentheses are emitted for [[Group]] nodes and whenever a nested binary operator binds looser
+  * than (or, on the right, as loosely as) its parent, so round-tripping through the parser preserves
+  * tree shape (e.g. `x ^ (-1.0 * x)` rather than `x ^ -1.0 * x`).
   */
 class TreeSerializer {
 
@@ -18,8 +22,7 @@ class TreeSerializer {
     else
       val sb = new StringBuilder
       walk(node, depth = 0, indented, sb)
-      val s = sb.toString
-      if s.nonEmpty then s else "Invalid"
+      sb.toString
 
   /** In-order walk: `indented` controls newlines and spacing inside parenthesized subtrees. */
   private def walk(e: Expr, depth: Int, indented: Boolean, sb: StringBuilder): Unit =
@@ -39,28 +42,49 @@ class TreeSerializer {
       case X =>
         sb.append("x")
       case Const(v) =>
-        sb.append(
-          if v == -1.0 then "-1"
-          else constString(v)
-        )
+        sb.append(constString(v))
 
   private def emitBinary(left: Expr, op: Operator, right: Expr, hasParens: Boolean, depth: Int, indented: Boolean, sb: StringBuilder): Unit =
     if indented && hasParens then
       sb.append("(\n").append("  " * depth)
-      walk(left, depth + 1, indented, sb)
+      emitOperand(left, op, isRight = false, depth + 1, indented, sb)
       sb.append(" ").append(op.symbol).append(" ")
-      walk(right, depth + 1, indented, sb)
+      emitOperand(right, op, isRight = true, depth + 1, indented, sb)
       sb.append("\n").append("  " * (depth - 1)).append(LexToken.RightParen.symbol)
     else if hasParens then
       sb.append(LexToken.LeftParen.symbol)
-      walk(left, depth + 1, indented, sb)
+      emitOperand(left, op, isRight = false, depth + 1, indented, sb)
       sb.append(" ").append(op.symbol).append(" ")
-      walk(right, depth + 1, indented, sb)
+      emitOperand(right, op, isRight = true, depth + 1, indented, sb)
       sb.append(LexToken.RightParen.symbol)
     else
-      walk(left, depth + 1, indented, sb)
+      emitOperand(left, op, isRight = false, depth + 1, indented, sb)
       sb.append(" ").append(op.symbol).append(" ")
-      walk(right, depth + 1, indented, sb)
+      emitOperand(right, op, isRight = true, depth + 1, indented, sb)
+
+  /** Walk a child, wrapping a bare [[BinOp]] in parentheses when precedence requires it. */
+  private def emitOperand(child: Expr, parentOp: Operator, isRight: Boolean, depth: Int, indented: Boolean, sb: StringBuilder): Unit =
+    child match
+      case BinOp(childOp, l, r) if needsPrecedenceParens(childOp, parentOp, isRight) =>
+        emitBinary(l, childOp, r, hasParens = true, depth, indented, sb)
+      case other =>
+        walk(other, depth, indented, sb)
+
+  /**
+    * Left-associative ops: left child with equal precedence needs no parens; right child with equal
+    * precedence does. A looser child always needs parentheses.
+    */
+  private def needsPrecedenceParens(childOp: Operator, parentOp: Operator, isRight: Boolean): Boolean =
+    val cmp = Integer.compare(precedenceRank(childOp), precedenceRank(parentOp))
+    if isRight then cmp >= 0 else cmp > 0
+
+  /** Lower rank binds tighter (`^` before `*`/`/` before `+`/`-`), matching [[mathexpression.MathOperatorsDefinition]]. */
+  private def precedenceRank(op: Operator): Int =
+    op.symbol match
+      case '^'         => 0
+      case '*' | '/'   => 1
+      case '+' | '-'   => 2
+      case _           => 99
 
   /** Parentheses around a lone variable or constant are not printed (matches `(x)` & `(((x)))`). */
   private def isAtomicForStrip(e: Expr): Boolean =
