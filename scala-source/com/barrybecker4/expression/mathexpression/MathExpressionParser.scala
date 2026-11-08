@@ -18,10 +18,14 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
     var pos = 0
     var token = ""
     var ch = exp.charAt(pos)
-    val closingToken = "" + LexToken.RightParen.symbol
-    while (pos < exp.length && token != closingToken) {
+    while (pos < exp.length) {
       ch match {
-        case ' ' =>
+        case c if Character.isWhitespace(c) =>
+          // Whitespace ends the current token; it must not glue digits across a gap.
+          if (token.nonEmpty) {
+            pushNodesForToken(token, nodes, exp, math.max(0, pos - 1))
+            token = ""
+          }
         case c if c == LexToken.LeftParen.symbol =>
           val closingParenPos = findClosingParen(exp, pos + 1)
           token = processSubExpression(exp, pos + 1, token, closingParenPos, nodes)
@@ -29,12 +33,16 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
         case c if c == LexToken.Minus.symbol && token.isEmpty && opDef.isLastNodeOperator(nodes) =>
           token += c
         case c if isNumericChar(c) =>
+          if (token.isEmpty && endsWithConst(nodes))
+            throw new ParseError(pos, "Adjacent numeric literals are not allowed; missing operator?", exp)
+          if (token.isEmpty && endsWithX(nodes))
+            throw new ParseError(pos, "Cannot have numbers after x in a term", exp)
           appendImplicitTimesAfterParen(nodes, token)
           token += ch
           if (token.contains("x"))
             throw new ParseError(pos, "Cannot have numbers after x in a term " + token, exp)
         case 'x' =>
-          appendImplicitTimesAfterParen(nodes, token)
+          appendImplicitTimesAfterFactor(nodes, token)
           token += ch
         case c if opDef.isOperator(c) =>
           pushNodesForToken(token, nodes, exp, pos)
@@ -58,40 +66,85 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
     val subExp = exp.substring(pos, closingParenPos)
     val subRoot = parse(subExp)
     val wrapped = Group(subRoot)
+    // Unary minus before `(...)` is one operand: -1 * (group). Do not leave "-" as a token.
+    if (token == String.valueOf(LexToken.Minus.symbol)) {
+      nodes.append(PlOperand(BinOp(TIMES, Const(-1.0), wrapped)))
+      return ""
+    }
     var resultToken = token
     if (token.nonEmpty) {
       pushNodesForToken(token, nodes, exp, pos - 1)
       resultToken = ""
       nodes.append(PlOperator(IMPLICIT_TIMES))
     }
-    else if (nodes.nonEmpty && endsWithGroup(nodes))
+    else if (nodes.nonEmpty && endsWithOperand(nodes))
       nodes.append(PlOperator(IMPLICIT_TIMES))
     nodes.append(PlOperand(wrapped))
     resultToken
   }
 
+  /**
+    * Emit cells for a scanned term. Unary-minus terms (`-x`, `-2x`) are one pre-grouped
+    * [[PlOperand]] so a following `^` or `/` cannot steal the minus. A positive coefficient
+    * like `2x` stays as separate `Const`, [[IMPLICIT_TIMES]], `X` cells so `^` still binds
+    * tighter than that multiply (`2x^2` → `2*(x^2)`, not `(2x)^2`), while juxtaposition still
+    * binds tighter than explicit `*`/`/` (`2x/3x` → `(2x)/(3x)`).
+    */
   override protected def pushNodesForToken(token: String, nodes: ListBuffer[ParseListItem], exp: String, errPos: Int): Unit = {
     if (token.isEmpty) return
     val len = token.length
     if (token.charAt(len - 1) == 'x') {
-      if (len > 1) {
-        if (token.charAt(0) == LexToken.Minus.symbol) nodes.append(PlOperand(Const(-1)))
-        else nodes.append(PlOperand(numberExpr(token.substring(0, len - 1), exp, errPos)))
-        nodes.append(PlOperator(IMPLICIT_TIMES))
+      if (len == 1)
+        nodes.append(PlOperand(X))
+      else {
+        val coeffText = token.substring(0, len - 1)
+        if (coeffText.charAt(0) == LexToken.Minus.symbol) {
+          val coeff =
+            if (coeffText == String.valueOf(LexToken.Minus.symbol)) Const(-1.0)
+            else numberExpr(coeffText, exp, errPos)
+          nodes.append(PlOperand(BinOp(TIMES, coeff, X)))
+        } else {
+          nodes.append(PlOperand(numberExpr(coeffText, exp, errPos)))
+          nodes.append(PlOperator(IMPLICIT_TIMES))
+          nodes.append(PlOperand(X))
+        }
       }
-      nodes.append(PlOperand(X))
     }
     else nodes.append(PlOperand(numberExpr(token, exp, errPos)))
   }
 
+  /** Implicit `*` after a closed `(...)` when the next token starts a number (e.g. `(x+1)2`). */
   private def appendImplicitTimesAfterParen(nodes: ListBuffer[ParseListItem], token: String): Unit =
     if (token.isEmpty && nodes.nonEmpty && endsWithGroup(nodes))
       nodes.append(PlOperator(IMPLICIT_TIMES))
 
+  /**
+    * Implicit `*` when `x` follows a completed factor separated by whitespace
+    * (e.g. `2 x`, `x x`, `(x+1) x`), or immediately after a closed group (`(x+1)x`).
+    */
+  private def appendImplicitTimesAfterFactor(nodes: ListBuffer[ParseListItem], token: String): Unit =
+    if (token.isEmpty && nodes.nonEmpty && endsWithOperand(nodes))
+      nodes.append(PlOperator(IMPLICIT_TIMES))
+
   private def endsWithGroup(nodes: ListBuffer[ParseListItem]): Boolean =
-    nodes.last match
+    nodes.nonEmpty && (nodes.last match
       case PlOperand(Group(_)) => true
-      case _                   => false
+      case _                   => false)
+
+  private def endsWithConst(nodes: ListBuffer[ParseListItem]): Boolean =
+    nodes.nonEmpty && (nodes.last match
+      case PlOperand(Const(_)) => true
+      case _                   => false)
+
+  private def endsWithX(nodes: ListBuffer[ParseListItem]): Boolean =
+    nodes.nonEmpty && (nodes.last match
+      case PlOperand(X) => true
+      case _            => false)
+
+  private def endsWithOperand(nodes: ListBuffer[ParseListItem]): Boolean =
+    nodes.nonEmpty && (nodes.last match
+      case PlOperand(_) => true
+      case _            => false)
 
   private def isNumericChar(ch: Char) = (ch >= '0' && ch <= '9') || ch == '.'
 
