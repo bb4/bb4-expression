@@ -47,7 +47,21 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
       if (pos < exp.length) ch = exp.charAt(pos)
     }
     pushNodesForToken(token, nodes, exp, math.max(0, pos - 1))
+    rejectDanglingOperators(nodes, exp, math.max(0, pos - 1))
     nodes
+  }
+
+  /** Catch leading/trailing operators while the character index is still known. */
+  private def rejectDanglingOperators(nodes: ListBuffer[ParseListItem], exp: String, lastPos: Int): Unit = {
+    if (nodes.isEmpty) return
+    nodes.head match {
+      case PlOperator(_) => throw new ParseError(0, "Missing operand", exp)
+      case _             =>
+    }
+    nodes.last match {
+      case PlOperator(_) => throw new ParseError(lastPos, "Missing operand", exp)
+      case _             =>
+    }
   }
 
   override protected def processSubExpression(exp: String, pos: Int,

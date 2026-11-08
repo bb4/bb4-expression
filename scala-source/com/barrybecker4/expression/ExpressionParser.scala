@@ -20,7 +20,7 @@ abstract class ExpressionParser(val opDef: OperatorsDefinition) {
     if (exp.isEmpty)
       throw new IllegalArgumentException("Expression must not be empty")
     val nodes = getNodesAtLevel(exp)
-    makeTreeFromNodes(nodes.toSeq)
+    makeTreeFromNodes(nodes.toSeq, exp)
   }
 
   /** Recursive method to find all cells for the terms at the current parenthesized level. */
@@ -41,7 +41,7 @@ abstract class ExpressionParser(val opDef: OperatorsDefinition) {
       if (ch == LexToken.RightParen.symbol) parenCount -= 1
     }
 
-    if (ch != LexToken.RightParen.symbol && i == exp.length)
+    if (parenCount != 0)
       throw new ParseError(pos, "Mismatched parenthesis", exp)
     i - 1
   }
@@ -56,8 +56,8 @@ abstract class ExpressionParser(val opDef: OperatorsDefinition) {
   protected def pushNodesForToken(token: String, nodes: ListBuffer[ParseListItem], exp: String, tokenEndPos: Int): Unit
 
   /** Converts a flat list to a single [[Expr]] by reducing in order of operator precedence. */
-  protected def makeTreeFromNodes(nodes: Seq[ParseListItem]): Expr =
-    new PrecedenceReducer(opDef.getOperatorPrecedence).reduce(nodes)
+  protected def makeTreeFromNodes(nodes: Seq[ParseListItem], source: String = ""): Expr =
+    new PrecedenceReducer(opDef.getOperatorPrecedence, source).reduce(nodes)
 
   /** Replace `num` cells starting at `start` with `newCell` (used by custom reducers). */
   protected def splice(nodes: ListBuffer[ParseListItem], start: Int, num: Int, newCell: ParseListItem): Unit = {
