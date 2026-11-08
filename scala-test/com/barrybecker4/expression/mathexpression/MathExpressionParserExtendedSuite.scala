@@ -3,7 +3,7 @@
  */
 package com.barrybecker4.expression.mathexpression
 
-import com.barrybecker4.expression.{ParseError, TreeSerializer}
+import com.barrybecker4.expression.{ExprEvaluator, ParseError, TreeSerializer}
 import com.barrybecker4.testsupport.strip
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
@@ -105,6 +105,27 @@ class MathExpressionParserExtendedSuite extends AnyFunSuite {
 
   test("internal spaces are ignored") {
     verify("1  +  2  *  3", "1.0 + 2.0 * 3.0")
+  }
+
+  test("space does not glue digits into one literal") {
+    val ex = Assertions.intercept[ParseError](parser.parse("2 3"))
+    assert(ex.offset > 0)
+  }
+
+  test("space does not glue decimal fragments into one literal") {
+    Assertions.intercept[ParseError](parser.parse("2 . 3"))
+  }
+
+  test("internal tabs are whitespace, same as spaces") {
+    verify("1\t+\t2", "1.0 + 2.0")
+  }
+
+  test("space before a parenthesized group is still implicit multiplication") {
+    assert(6.0 === ExprEvaluator.eval(parser.parse("2 (3)"), 0.0))
+  }
+
+  test("space before x is still implicit multiplication") {
+    verify("2 x", "2.0 * x")
   }
 
   // --- Deep structure ---
