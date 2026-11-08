@@ -3,7 +3,7 @@
  */
 package com.barrybecker4.expression.mathexpression
 
-import com.barrybecker4.expression.{ParseError, TreeSerializer}
+import com.barrybecker4.expression.{ExprEvaluator, ParseError, TreeSerializer}
 import com.barrybecker4.testsupport.strip
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
@@ -180,5 +180,29 @@ class MathExpressionParserExtendedSuite extends AnyFunSuite {
     val once = serializer.regularSerialize(parser.parse(input))
     val twice = serializer.regularSerialize(parser.parse(once))
     assertResult(once)(twice)
+  }
+
+  test("scientific notation from Double.toString round-trips") {
+    for (src <- Seq("10000000", "0.0001", "x+10000000", "x+0.0001")) {
+      val once = serializer.regularSerialize(parser.parse(src))
+      val twice = serializer.regularSerialize(parser.parse(once))
+      assert(once === twice)
+    }
+  }
+
+  test("a literal past Double range is a parse error, not Infinity") {
+    val huge = "1" + ("0" * 400)
+    val ex = intercept[ParseError](parser.parse(huge))
+    assert(ex.getMessage.toLowerCase.contains("infinite") || ex.getMessage.contains(huge.take(8)))
+  }
+
+  test("explicit exponent is accepted when the lexer allows it") {
+    assert(1.0e7 === ExprEvaluator.eval(parser.parse("1.0E7"), 0.0))
+    assert(1.0e-4 === ExprEvaluator.eval(parser.parse("1E-4"), 0.0))
+  }
+
+  test("bare e remains an unexpected character") {
+    val ex = intercept[ParseError](parser.parse("e"))
+    assert(ex.getMessage.contains("Unexpected character"))
   }
 }

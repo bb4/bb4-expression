@@ -33,6 +33,10 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
           token += ch
           if (token.contains("x"))
             throw new ParseError(pos, "Cannot have numbers after x in a term " + token, exp)
+        case c if (c == 'e' || c == 'E') && isNumberToken(token) =>
+          val expEnd = scanExponent(exp, pos)
+          token += exp.substring(pos, expEnd)
+          pos = expEnd - 1
         case 'x' =>
           appendImplicitTimesAfterParen(nodes, token)
           token += ch
@@ -95,10 +99,29 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
 
   private def isNumericChar(ch: Char) = (ch >= '0' && ch <= '9') || ch == '.'
 
+  /** True when `token` is a numeric literal in progress (optional leading minus, digits/dot only). */
+  private def isNumberToken(token: String): Boolean =
+    token.nonEmpty && !token.contains('x') && token.exists(ch => ch >= '0' && ch <= '9')
+
+  /**
+    * Consume an optional exponent `[eE][+-]?digits` starting at `pos`.
+    * Requires at least one digit after the optional sign; otherwise the `e`/`E` is unexpected.
+    */
+  private def scanExponent(exp: String, pos: Int): Int = {
+    var i = pos + 1
+    if (i < exp.length && (exp.charAt(i) == '+' || exp.charAt(i) == '-')) i += 1
+    val digitStart = i
+    while (i < exp.length && exp.charAt(i) >= '0' && exp.charAt(i) <= '9') i += 1
+    if (i == digitStart)
+      throw new ParseError(pos, "Unexpected character '" + exp.charAt(pos) + "' in expression", exp)
+    i
+  }
+
   private def numberExpr(token: String, exp: String, errPos: Int): Expr =
     try {
       val num = token.toDouble
-      if (num.isNaN) throw new ParseError(errPos, "Invalid number in expression: " + token, exp)
+      if (num.isNaN || num.isInfinite)
+        throw new ParseError(errPos, "Non-finite (infinite or NaN) number in expression: " + token, exp)
       Const(num)
     } catch {
       case _: NumberFormatException =>
