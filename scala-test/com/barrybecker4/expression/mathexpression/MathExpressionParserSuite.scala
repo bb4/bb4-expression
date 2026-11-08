@@ -29,6 +29,15 @@ class MathExpressionParserSuite extends AnyFunSuite {
     verifyParse("-x", "-1 * x")
   }
 
+  test("-2x keeps the coefficient") {
+    verifyParse("-2x", "-2.0 * x")
+  }
+
+  test("-2.5x and -.5x keep the coefficient") {
+    verifyParse("-2.5x", "-2.5 * x")
+    verifyParse("-.5x", "-0.5 * x")
+  }
+
   test("ConstantIntOnlyExp(") {
     verifyParse("5", "5.0")
   }

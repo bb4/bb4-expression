@@ -75,8 +75,11 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
     val len = token.length
     if (token.charAt(len - 1) == 'x') {
       if (len > 1) {
-        if (token.charAt(0) == LexToken.Minus.symbol) nodes.append(PlOperand(Const(-1)))
-        else nodes.append(PlOperand(numberExpr(token.substring(0, len - 1), exp, errPos)))
+        val coefficient = token.substring(0, len - 1)
+        val coef =
+          if (coefficient == "" + LexToken.Minus.symbol) Const(-1)
+          else numberExpr(coefficient, exp, errPos)
+        nodes.append(PlOperand(coef))
         nodes.append(PlOperator(TIMES))
       }
       nodes.append(PlOperand(X))
