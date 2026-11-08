@@ -21,7 +21,12 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
     val closingToken = "" + LexToken.RightParen.symbol
     while (pos < exp.length && token != closingToken) {
       ch match {
-        case ' ' =>
+        case c if Character.isWhitespace(c) =>
+          // Whitespace ends the current token; it must not glue digits across a gap.
+          if (token.nonEmpty) {
+            pushNodesForToken(token, nodes, exp, math.max(0, pos - 1))
+            token = ""
+          }
         case c if c == LexToken.LeftParen.symbol =>
           val closingParenPos = findClosingParen(exp, pos + 1)
           token = processSubExpression(exp, pos + 1, token, closingParenPos, nodes)
@@ -29,12 +34,16 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
         case c if c == LexToken.Minus.symbol && token.isEmpty && opDef.isLastNodeOperator(nodes) =>
           token += c
         case c if isNumericChar(c) =>
+          if (token.isEmpty && endsWithConst(nodes))
+            throw new ParseError(pos, "Adjacent numeric literals are not allowed; missing operator?", exp)
+          if (token.isEmpty && endsWithX(nodes))
+            throw new ParseError(pos, "Cannot have numbers after x in a term", exp)
           appendImplicitTimesAfterParen(nodes, token)
           token += ch
           if (token.contains("x"))
             throw new ParseError(pos, "Cannot have numbers after x in a term " + token, exp)
         case 'x' =>
-          appendImplicitTimesAfterParen(nodes, token)
+          appendImplicitTimesAfterFactor(nodes, token)
           token += ch
         case c if opDef.isOperator(c) =>
           pushNodesForToken(token, nodes, exp, pos)
@@ -69,7 +78,7 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
       resultToken = ""
       nodes.append(PlOperator(TIMES))
     }
-    else if (nodes.nonEmpty && endsWithGroup(nodes))
+    else if (nodes.nonEmpty && endsWithOperand(nodes))
       nodes.append(PlOperator(TIMES))
     nodes.append(PlOperand(wrapped))
     resultToken
@@ -96,14 +105,38 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
     else nodes.append(PlOperand(numberExpr(token, exp, errPos)))
   }
 
+  /** Implicit `*` after a closed `(...)` when the next token starts a number (e.g. `(x+1)2`). */
   private def appendImplicitTimesAfterParen(nodes: ListBuffer[ParseListItem], token: String): Unit =
     if (token.isEmpty && nodes.nonEmpty && endsWithGroup(nodes))
       nodes.append(PlOperator(TIMES))
 
+  /**
+    * Implicit `*` when `x` follows a completed factor separated by whitespace
+    * (e.g. `2 x`, `x x`, `(x+1) x`), or immediately after a closed group (`(x+1)x`).
+    */
+  private def appendImplicitTimesAfterFactor(nodes: ListBuffer[ParseListItem], token: String): Unit =
+    if (token.isEmpty && nodes.nonEmpty && endsWithOperand(nodes))
+      nodes.append(PlOperator(TIMES))
+
   private def endsWithGroup(nodes: ListBuffer[ParseListItem]): Boolean =
-    nodes.last match
+    nodes.nonEmpty && (nodes.last match
       case PlOperand(Group(_)) => true
-      case _                   => false
+      case _                   => false)
+
+  private def endsWithConst(nodes: ListBuffer[ParseListItem]): Boolean =
+    nodes.nonEmpty && (nodes.last match
+      case PlOperand(Const(_)) => true
+      case _                   => false)
+
+  private def endsWithX(nodes: ListBuffer[ParseListItem]): Boolean =
+    nodes.nonEmpty && (nodes.last match
+      case PlOperand(X) => true
+      case _            => false)
+
+  private def endsWithOperand(nodes: ListBuffer[ParseListItem]): Boolean =
+    nodes.nonEmpty && (nodes.last match
+      case PlOperand(_) => true
+      case _            => false)
 
   private def isNumericChar(ch: Char) = (ch >= '0' && ch <= '9') || ch == '.'
 
