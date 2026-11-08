@@ -12,6 +12,20 @@ class ExprEvaluatorSuite extends AnyFunSuite {
     assert(5.0 === ExprEvaluator.eval(expr, 2.0))
   }
 
+  test("-2x keeps the coefficient") {
+    assert(-6.0 === ExprEvaluator.eval(parser.parse("-2x"), 3.0))
+  }
+
+  test("-2.5x and -.5x keep the coefficient") {
+    assert(-5.0 === ExprEvaluator.eval(parser.parse("-2.5x"), 2.0))
+    assert(-1.5 === ExprEvaluator.eval(parser.parse("-.5x"), 3.0))
+  }
+
+  test("explicit star and parentheses already keep a negative coefficient") {
+    assert(-6.0 === ExprEvaluator.eval(parser.parse("-2*x"), 3.0))
+    assert(-6.0 === ExprEvaluator.eval(parser.parse("(-2)x"), 3.0))
+  }
+
   test("eval unwraps Group") {
     val expr = BinOp(PLUS, Group(Const(1.0)), Const(2.0))
     assert(3.0 === ExprEvaluator.eval(expr, 99.0))
