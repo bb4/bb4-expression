@@ -11,9 +11,13 @@ object MathOperatorsDefinition {
     * '''Note on `^`''' — many mathematical notations treat exponentiation as right-associative
     * (`a^b^c` as `a^(b^c)`). This library evaluates the same string as `((a^b)^c)` (left-associative
     * reduction), which matches the historical behavior tested in `MathExpressionParserExtendedSuite`.
+    *
+    * '''Implicit multiply''' — juxtaposition (`IMPLICIT_TIMES`) is tighter than explicit `*`/`/`,
+    * so `2x/3x` is `(2x)/(3x)`. Explicit `2*x/3*x` stays left-associative.
     */
   private val OPERATOR_PRECEDENCE = Array(
     Array[Operator](EXPONENT),
+    Array[Operator](IMPLICIT_TIMES),
     Array[Operator](TIMES, DIVIDE),
     Array[Operator](PLUS, MINUS)
   )

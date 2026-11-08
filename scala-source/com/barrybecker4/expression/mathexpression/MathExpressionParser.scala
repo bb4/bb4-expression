@@ -62,10 +62,10 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
     if (token.nonEmpty) {
       pushNodesForToken(token, nodes, exp, pos - 1)
       resultToken = ""
-      nodes.append(PlOperator(TIMES))
+      nodes.append(PlOperator(IMPLICIT_TIMES))
     }
     else if (nodes.nonEmpty && endsWithGroup(nodes))
-      nodes.append(PlOperator(TIMES))
+      nodes.append(PlOperator(IMPLICIT_TIMES))
     nodes.append(PlOperand(wrapped))
     resultToken
   }
@@ -77,7 +77,7 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
       if (len > 1) {
         if (token.charAt(0) == LexToken.Minus.symbol) nodes.append(PlOperand(Const(-1)))
         else nodes.append(PlOperand(numberExpr(token.substring(0, len - 1), exp, errPos)))
-        nodes.append(PlOperator(TIMES))
+        nodes.append(PlOperator(IMPLICIT_TIMES))
       }
       nodes.append(PlOperand(X))
     }
@@ -86,7 +86,7 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
 
   private def appendImplicitTimesAfterParen(nodes: ListBuffer[ParseListItem], token: String): Unit =
     if (token.isEmpty && nodes.nonEmpty && endsWithGroup(nodes))
-      nodes.append(PlOperator(TIMES))
+      nodes.append(PlOperator(IMPLICIT_TIMES))
 
   private def endsWithGroup(nodes: ListBuffer[ParseListItem]): Boolean =
     nodes.last match

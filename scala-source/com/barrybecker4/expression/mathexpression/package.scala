@@ -13,5 +13,6 @@ package object mathexpression:
   val PLUS: MathOperators = MathOperators.PLUS
   val MINUS: MathOperators = MathOperators.MINUS
   val TIMES: MathOperators = MathOperators.TIMES
+  val IMPLICIT_TIMES: MathOperators = MathOperators.IMPLICIT_TIMES
   val DIVIDE: MathOperators = MathOperators.DIVIDE
   val EXPONENT: MathOperators = MathOperators.EXPONENT

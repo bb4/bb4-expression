@@ -11,6 +11,7 @@ class MathOperatorsSuite extends AnyFunSuite {
     assertResult('+')(PLUS.symbol)
     assertResult('-')(MINUS.symbol)
     assertResult('*')(TIMES.symbol)
+    assertResult('*')(IMPLICIT_TIMES.symbol)
     assertResult('/')(DIVIDE.symbol)
     assertResult('^')(EXPONENT.symbol)
   }
@@ -19,6 +20,7 @@ class MathOperatorsSuite extends AnyFunSuite {
     assertResult(5.0)(PLUS.operate(2.0, 3.0))
     assertResult(-1.0)(MINUS.operate(2.0, 3.0))
     assertResult(6.0)(TIMES.operate(2.0, 3.0))
+    assertResult(6.0)(IMPLICIT_TIMES.operate(2.0, 3.0))
     assertResult(2.0)(DIVIDE.operate(6.0, 3.0))
   }
 
@@ -35,6 +37,10 @@ class MathOperatorsSuite extends AnyFunSuite {
     assert(MathOperators.operatorFor('^') eq EXPONENT)
   }
 
+  test("implicit times is distinct from explicit times") {
+    assert(IMPLICIT_TIMES ne TIMES)
+  }
+
   test("operatorFor rejects unknown symbol") {
     val ex = Assertions.intercept[IllegalArgumentException](MathOperators.operatorFor('?'))
     assert(ex.getMessage.contains("Not an operator symbol"))
@@ -44,6 +50,7 @@ class MathOperatorsSuite extends AnyFunSuite {
     assert(PLUS eq MathOperators.PLUS)
     assert(MINUS eq MathOperators.MINUS)
     assert(TIMES eq MathOperators.TIMES)
+    assert(IMPLICIT_TIMES eq MathOperators.IMPLICIT_TIMES)
     assert(DIVIDE eq MathOperators.DIVIDE)
     assert(EXPONENT eq MathOperators.EXPONENT)
   }

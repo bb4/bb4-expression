@@ -9,13 +9,13 @@ This library project for parsing mathematical expressions.
 `MathExpressionParser` accepts a single indeterminate `x`, decimal literals, parentheses, the binary operators `+ - * / ^`, optional whitespace, and implicit multiplication (e.g. `2x`, `2(x+1)`, `(x+1)x`). Unary `-` is supported for literals and for `x` (rendered as `-1 * x`). Other letters are rejected.
 
 ```ebnf
-expr        = sum ;
-sum         = product { ( '+' | '-' ) product } ;
-product     = power { ( '*' | '/' ) power | implicit } ;
-implicit    = /* juxtaposition after ')' or between factors: 2(x), (x+1)x */ ;
-power       = atom { '^' atom } ;   (* note: '^' is left-associ here, not right-assoc *)
-atom        = number | 'x' | '(' expr ')' | '-' atom ;
-number      = digit { digit } [ '.' digit { digit } ] ;
+expr          = sum ;
+sum           = product { ( '+' | '-' ) product } ;
+product       = juxtaposition { ( '*' | '/' ) juxtaposition } ;
+juxtaposition = power { power } ;   (* implicit multiply binds tighter than * / : 2x, 2(x+1), (x+1)x *)
+power         = atom { '^' atom } ;   (* note: '^' is left-associ here, not right-assoc *)
+atom          = number | 'x' | '(' expr ')' | '-' atom ;
+number        = digit { digit } [ '.' digit { digit } ] ;
 ```
 
 Parse failures are thrown as `com.barrybecker4.expression.ParseError` (an `IllegalArgumentException` with `offset` into the trimmed source). Use `com.barrybecker4.expression.ExprEvaluator` to evaluate a parsed `Expr` for a numeric `x`.
