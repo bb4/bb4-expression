@@ -58,15 +58,4 @@ abstract class ExpressionParser(val opDef: OperatorsDefinition) {
   /** Converts a flat list to a single [[Expr]] by reducing in order of operator precedence. */
   protected def makeTreeFromNodes(nodes: Seq[ParseListItem], source: String = ""): Expr =
     new PrecedenceReducer(opDef.getOperatorPrecedence, source).reduce(nodes)
-
-  /** Replace `num` cells starting at `start` with `newCell` (used by custom reducers). */
-  protected def splice(nodes: ListBuffer[ParseListItem], start: Int, num: Int, newCell: ParseListItem): Unit = {
-    nodes.remove(start, num)
-    nodes.insert(start, newCell)
-  }
-
-  protected def isOperatorCell(item: ParseListItem, ops: Array[Operator]): Boolean =
-    item match
-      case PlOperator(o) => ops.contains(o)
-      case _             => false
 }
