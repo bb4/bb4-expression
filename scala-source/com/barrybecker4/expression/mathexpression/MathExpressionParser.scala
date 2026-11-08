@@ -76,8 +76,10 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
   }
 
   /**
-    * Emit one [[PlOperand]] per term. Coefficient×`x` (including unary `-x` / `-2x`) is a single
-    * pre-grouped product so a following `^` or `/` cannot reassociate through an infix `TIMES`.
+    * Emit cells for a scanned term. Unary-minus terms (`-x`, `-2x`) are one pre-grouped
+    * [[PlOperand]] so a following `^` or `/` cannot steal the minus. A positive coefficient
+    * like `2x` stays as separate `Const`, `TIMES`, `X` cells so `^` still binds tighter
+    * (`2x^2` → `2*(x^2)`, not `(2x)^2`).
     */
   override protected def pushNodesForToken(token: String, nodes: ListBuffer[ParseListItem], exp: String, errPos: Int): Unit = {
     if (token.isEmpty) return
@@ -87,10 +89,16 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
         nodes.append(PlOperand(X))
       else {
         val coeffText = token.substring(0, len - 1)
-        val coeff =
-          if (coeffText == String.valueOf(LexToken.Minus.symbol)) Const(-1.0)
-          else numberExpr(coeffText, exp, errPos)
-        nodes.append(PlOperand(BinOp(TIMES, coeff, X)))
+        if (coeffText.charAt(0) == LexToken.Minus.symbol) {
+          val coeff =
+            if (coeffText == String.valueOf(LexToken.Minus.symbol)) Const(-1.0)
+            else numberExpr(coeffText, exp, errPos)
+          nodes.append(PlOperand(BinOp(TIMES, coeff, X)))
+        } else {
+          nodes.append(PlOperand(numberExpr(coeffText, exp, errPos)))
+          nodes.append(PlOperator(TIMES))
+          nodes.append(PlOperand(X))
+        }
       }
     }
     else nodes.append(PlOperand(numberExpr(token, exp, errPos)))
