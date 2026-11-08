@@ -97,6 +97,12 @@ class MathExpressionParserSuite extends AnyFunSuite {
     verifyParse("-2x", "-2.0 * x")
   }
 
+  test("positive coefficient times x leaves ^ tighter than *") {
+    // 2x^2 must be 2*(x^2), not (2x)^2 — only unary-minus terms are pre-grouped
+    assert(18.0 === ExprEvaluator.eval(parser.parse("2x^2"), 3.0))
+    verifyParse("2x^2", "2.0 * x ^ 2.0")
+  }
+
   test("XXXExp") {
     verifyParse("x*x *  x", "x * x * x")
   }
