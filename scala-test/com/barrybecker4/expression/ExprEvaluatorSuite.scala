@@ -35,6 +35,13 @@ class ExprEvaluatorSuite extends AnyFunSuite {
     assert(Math.abs(49.0 - actual) < 1e-9)
   }
 
+  test("eval same-operator chains use left-associativity") {
+    assert(1.0 === ExprEvaluator.eval(parser.parse("8/4/2"), 0.0))
+    assert(5.0 === ExprEvaluator.eval(parser.parse("10-3-2"), 0.0))
+    val pow = ExprEvaluator.eval(parser.parse("2^3^2"), 0.0)
+    assert(Math.abs(64.0 - pow) < 1e-9)
+  }
+
   test("eval division by zero yields Infinity") {
     val expr = parser.parse("1/x")
     assert(ExprEvaluator.eval(expr, 0.0).isInfinity)

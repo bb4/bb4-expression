@@ -3,7 +3,7 @@
  */
 package com.barrybecker4.expression.mathexpression
 
-import com.barrybecker4.expression.{ParseError, TreeSerializer}
+import com.barrybecker4.expression.{ExprEvaluator, ParseError, TreeSerializer}
 import com.barrybecker4.testsupport.strip
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
@@ -95,6 +95,8 @@ class MathExpressionParserSuite extends AnyFunSuite {
 
   test("multiplication binds tighter than addition") {
     verifyParse("2 + 3 * 4", "2.0 + 3.0 * 4.0")
+    // (2+3)*4 would be 20; serialization is identical for both trees
+    assert(14.0 === ExprEvaluator.eval(parser.parse("2 + 3 * 4"), 0.0))
   }
 
   test("parse rejects null expression") {
