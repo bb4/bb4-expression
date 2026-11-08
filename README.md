@@ -6,7 +6,7 @@ This library project for parsing mathematical expressions.
 
 ### Language (informal grammar)
 
-`MathExpressionParser` accepts a single indeterminate `x`, decimal literals, parentheses, the binary operators `+ - * / ^`, optional whitespace, and implicit multiplication (e.g. `2x`, `2(x+1)`, `(x+1)x`). Unary `-` is supported for literals and for `x` (rendered as `-1 * x`). Other letters are rejected.
+`MathExpressionParser` accepts a single indeterminate `x`, decimal literals, parentheses, the binary operators `+ - * / ^`, optional whitespace, and implicit multiplication (e.g. `2x`, `2(x+1)`, `(x+1)x`). Unary `-` is part of an `atom` (tighter than `^`): `-x`, `-2x`, and `-(x+1)` each become one operand, so `x^-x` is `x^(-x)` and `-x^2` is `(-x)^2`. Other letters are rejected.
 
 ```ebnf
 expr        = sum ;

@@ -3,7 +3,7 @@
  */
 package com.barrybecker4.expression.mathexpression
 
-import com.barrybecker4.expression.{ParseError, TreeSerializer}
+import com.barrybecker4.expression.{ExprEvaluator, ParseError, TreeSerializer}
 import com.barrybecker4.testsupport.strip
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
@@ -26,7 +26,7 @@ class MathExpressionParserSuite extends AnyFunSuite {
   }
 
   test("NegXExp") {
-    verifyParse("-x", "-1 * x")
+    verifyParse("-x", "-1.0 * x")
   }
 
   test("ConstantIntOnlyExp(") {
@@ -54,15 +54,47 @@ class MathExpressionParserSuite extends AnyFunSuite {
   }
 
   test("XtimesNegXExp") {
-    verifyParse("x*-x", "x * -1 * x")
+    // -x is one operand, so the tree is x * (-1 * x), not the flat (x * -1) * x
+    verifyParse("x*-x", "x * (-1.0 * x)")
   }
 
   test("XRaisedToXMinus3XExp") {
     verifyParse("x^x-3x", "x ^ x - 3.0 * x")
   }
 
+  /** Serialization alone cannot tell ((x^-1)*x)-3x from (x^(-x))-3x; assert evaluation. */
   test("XRaisedToNegXMinus3XExp") {
-    verifyParse("x^-x-3x", "x ^ -1 * x - 3.0 * x")
+    val expr = parser.parse("x^-x-3x")
+    assertResult("x ^ (-1.0 * x) - 3.0 * x") {
+      serializer.regularSerialize(expr)
+    }
+    assert(math.abs(-5.75 - ExprEvaluator.eval(expr, 2.0)) < 1e-9)
+  }
+
+  test("unary minus stays inside the right operand of ^ and /") {
+    assert(math.abs(0.25 - ExprEvaluator.eval(parser.parse("x^-x"), 2.0)) < 1e-9)
+    assert(-1.0 === ExprEvaluator.eval(parser.parse("x/-x"), 4.0))
+    assert(math.abs(0.0625 - ExprEvaluator.eval(parser.parse("2^-x"), 4.0)) < 1e-9)
+  }
+
+  test("unary minus of a parenthesized group") {
+    assert(-5.0 === ExprEvaluator.eval(parser.parse("-(x+1)"), 4.0))
+  }
+
+  test("double minus on a literal still parses") {
+    assert(5.0 === ExprEvaluator.eval(parser.parse("2--3"), 0.0))
+  }
+
+  test("-2^2 and -x^2 follow the same unary precedence (EBNF: unary tighter than ^)") {
+    val lit = ExprEvaluator.eval(parser.parse("-2^2"), 0.0)
+    val vari = ExprEvaluator.eval(parser.parse("-x^2"), 2.0)
+    assert(4.0 === lit)
+    assert(4.0 === vari)
+  }
+
+  test("negative coefficient times x is one operand") {
+    assert(-6.0 === ExprEvaluator.eval(parser.parse("-2x"), 3.0))
+    verifyParse("-2x", "-2.0 * x")
   }
 
   test("XXXExp") {
