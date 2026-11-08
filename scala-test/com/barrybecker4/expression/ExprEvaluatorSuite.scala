@@ -39,4 +39,15 @@ class ExprEvaluatorSuite extends AnyFunSuite {
     val expr = parser.parse("1/x")
     assert(ExprEvaluator.eval(expr, 0.0).isInfinity)
   }
+
+  test("juxtaposition binds tighter than explicit division, but not tighter than ^") {
+    assert(math.abs(2.0 / 3.0 - ExprEvaluator.eval(parser.parse("2x/3x"), 3.0)) < 1e-9)
+    assert(0.5 === ExprEvaluator.eval(parser.parse("x/2x"), 3.0))
+    assert(math.abs(2.0 / 3.0 - ExprEvaluator.eval(parser.parse("2(x+1)/3(x+1)"), 3.0)) < 1e-9)
+    assert(math.abs(18.0 - ExprEvaluator.eval(parser.parse("2x^2"), 3.0)) < 1e-9) // not (2x)^2
+  }
+
+  test("explicit * and / stay left-associative") {
+    assert(6.0 === ExprEvaluator.eval(parser.parse("2*x/3*x"), 3.0))
+  }
 }

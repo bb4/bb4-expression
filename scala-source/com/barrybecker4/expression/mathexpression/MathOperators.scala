@@ -11,15 +11,17 @@ enum MathOperators(override val symbol: Char) extends Operator(symbol):
   case PLUS extends MathOperators('+')
   case MINUS extends MathOperators('-')
   case TIMES extends MathOperators('*')
+  /** Juxtaposition (e.g. `2x`); same print symbol as [[TIMES]], distinct instance for precedence. */
+  case IMPLICIT_TIMES extends MathOperators('*')
   case DIVIDE extends MathOperators('/')
   case EXPONENT extends MathOperators('^')
 
   override def operate(operand1: Double, operand2: Double): Double = this match
-    case PLUS     => operand1 + operand2
-    case MINUS    => operand1 - operand2
-    case TIMES    => operand1 * operand2
-    case DIVIDE   => operand1 / operand2
-    case EXPONENT => math.pow(operand1, operand2)
+    case PLUS                      => operand1 + operand2
+    case MINUS                     => operand1 - operand2
+    case TIMES | IMPLICIT_TIMES    => operand1 * operand2
+    case DIVIDE                    => operand1 / operand2
+    case EXPONENT                  => math.pow(operand1, operand2)
 
 object MathOperators:
 
