@@ -18,8 +18,7 @@ class MathExpressionParser(opDef: OperatorsDefinition = new MathOperatorsDefinit
     var pos = 0
     var token = ""
     var ch = exp.charAt(pos)
-    val closingToken = "" + LexToken.RightParen.symbol
-    while (pos < exp.length && token != closingToken) {
+    while (pos < exp.length) {
       ch match {
         case ' ' =>
         case c if c == LexToken.LeftParen.symbol =>
